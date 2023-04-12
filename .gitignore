@@ -163,7 +163,7 @@ cython_debug/
 .idea
 
 # my examples
-example/
+examples
 
 
 
