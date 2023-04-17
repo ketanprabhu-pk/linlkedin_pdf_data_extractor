@@ -10,7 +10,7 @@ import re
 
 
 class Summary(DTO):
-    description= []
+    description = []
 
 
 class Contact(DTO):
@@ -19,32 +19,36 @@ class Contact(DTO):
     link: str
     description: str
 
+
 class Experience(DTO):
+    id: int
     companyName: str
     position: str
-    startDate: str
-    endDate: str
-    description=[]
+    date: str
+    description = {}
 
 
 class Education(DTO):
     course: str
     university: str
     date: str
-    description=[]
+    description = []
+
 
 class User(DTO):
     name: str
     contact: Contact
     title: str
     location: str
-    summary = []
+    summary: str
     skills = []
     experience: list[Experience]
     education: list[Education]
+
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=False, indent=4)
+
 
 # Dict = {}
 Data = []
@@ -68,17 +72,17 @@ def pdf_to_json():
     print("The variable, mobile : ", dtoData.contact.mobile)
     print("The variable, email : ", dtoData.contact.email)
     print("The variable, title : ", dtoData.title)
-    print("The variable, title : ", dtoData.title)
+    print("The variable, summary : ", dtoData.summary)
 
 
-def traverse(elements: List[Section], level, parent = None):
+def traverse(elements: List[Section], level, parent=None):
     # print(len(elements))
     for e in elements:
-        if(e.heading.text == "Summary" or e.heading.text == "Contact" or 
+        if (e.heading.text == "Summary" or e.heading.text == "Contact" or
            e.heading.text == "Top Skills" or e.heading.text == "Experience" or e.heading.text == "Education"):
-            parent=e.heading.text
-        # print(element)
-        Data.append({"level": level+1, "text": e.heading.text,"type": parent,
+            parent = e.heading.text
+        # print(e).
+        Data.append({"level": level+1, "text": e.heading.text, "type": parent,
                     "mean_size": e.heading.style.mean_size, "max_size": e.heading.style.max_size})
         # print("Level: ", level, element)
         traverse(e.children, e.level, parent)
@@ -90,6 +94,7 @@ def createData(data):
     contact = Contact
     experience = Experience
     education = Education
+    i = 0
     for index, row in data.iterrows():
         if (row['level'] == 1 and row["mean_size"] == 26.0 and row["max_size"] == 26.0):
             user.name = row["text"]
@@ -101,26 +106,35 @@ def createData(data):
             contact.description = row["text"]
         elif (row['level'] == 3 and row["mean_size"] == 10.5 and row["max_size"] == 10.5 and row["type"] == "Top Skills"):
             user.skills.append(row["text"])
-        elif (row['level'] == 2 and row["mean_size"] == 10.5 and row["max_size"] == 10.5 and row["type"] == "Experience"):
-            experience.description.append(row["text"])
+        # elif (row['level'] == 2 and row["type"] == "Experience"):
+        #     if (row["max_size"] == 12.0):
+        #         if(experience.companyName is not None):
+        #             user.experience.append(experience)
+        #         experience=Experience
+        #         # experience.id = i
+        #         experience.companyName = row['text'].split('\n')[0]
+        #         experience.position = row['text'].split('\n')[1]
+        #         experience.date = row['text'].split('\n')[2]
+        #         i = i + 1
+        #     elif (row["mean_size"] == 10.5 and row["max_size"] == 10.5):
+        #         experience.description.append(row["text"])
         elif (row['level'] == 2 and row["mean_size"] == 12.0 and row["max_size"] == 12.0 and row["type"] == "Education"):
             education.description.append(row["text"])
 
-    user.summary = summary
-
+    user.summary = ' '.join(map(str, summary.description))
 
     mobile_pattern = r'\+(\d{1,2})?\s*\d{9,10}\s*\((Mobile)\)'
     email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     match = re.search(mobile_pattern, contact.description)
     if match:
         contact.mobile = match.group(0)
-        contact.email = re.search(email_pattern, contact.description[match.end():]).group(0)
+        contact.email = re.search(
+            email_pattern, contact.description[match.end():]).group(0)
     else:
         contact.email = re.search(email_pattern, contact.description).group(0)
     user.contact = contact
 
     return user
-
 
 
 if __name__ == "__main__":
