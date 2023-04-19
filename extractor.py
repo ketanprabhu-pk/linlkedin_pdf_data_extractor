@@ -64,13 +64,14 @@ def pdf_to_json():
     print(a[0].children[1])
 
     traverse(document.elements, document.elements[0].level)
-    for d in Data:
-        print(d)
+    # for d in Data:
+    #     print(d)
     df = pd.DataFrame(Data)
     dtoData = createData(df)
     print("The variable, name : ", dtoData.name)
     print("The variable, mobile : ", dtoData.contact.mobile)
     print("The variable, email : ", dtoData.contact.email)
+    print("The variable, location : ", dtoData.location)
     print("The variable, title : ", dtoData.title)
     print("The variable, summary : ", dtoData.summary)
 
@@ -81,7 +82,6 @@ def traverse(elements: List[Section], level, parent=None):
         if (e.heading.text == "Summary" or e.heading.text == "Contact" or
            e.heading.text == "Top Skills" or e.heading.text == "Experience" or e.heading.text == "Education"):
             parent = e.heading.text
-        # print(e).
         Data.append({"level": level+1, "text": e.heading.text, "type": parent,
                     "mean_size": e.heading.style.mean_size, "max_size": e.heading.style.max_size})
         # print("Level: ", level, element)
@@ -99,7 +99,8 @@ def createData(data):
         if (row['level'] == 1 and row["mean_size"] == 26.0 and row["max_size"] == 26.0):
             user.name = row["text"]
         elif (row['level'] == 1 and row["mean_size"] == 12.0 and row["max_size"] == 12.0):
-            user.title = row["text"]
+            user.title = ' '.join(map(str, row["text"].split('\n')[0:-1]))
+            user.location = row['text'].split('\n')[-1]
         elif (row['level'] == 2 and row["mean_size"] == 12.0 and row["max_size"] == 12.0 and row["type"] == "Summary"):
             summary.description.append(row["text"])
         elif (row['level'] == 3 and row["mean_size"] == 10.5 and row["max_size"] == 10.5 and row["type"] == "Contact"):
@@ -108,18 +109,19 @@ def createData(data):
             user.skills.append(row["text"])
         # elif (row['level'] == 2 and row["type"] == "Experience"):
         #     if (row["max_size"] == 12.0):
-        #         if(experience.companyName is not None):
-        #             user.experience.append(experience)
+        #         # if(experience.companyName is not None):
+        #         #     user.experience.append(experience)
         #         experience=Experience
         #         # experience.id = i
+        #         print(row['text'],"\n")
         #         experience.companyName = row['text'].split('\n')[0]
         #         experience.position = row['text'].split('\n')[1]
         #         experience.date = row['text'].split('\n')[2]
         #         i = i + 1
         #     elif (row["mean_size"] == 10.5 and row["max_size"] == 10.5):
         #         experience.description.append(row["text"])
-        elif (row['level'] == 2 and row["mean_size"] == 12.0 and row["max_size"] == 12.0 and row["type"] == "Education"):
-            education.description.append(row["text"])
+        # elif (row['level'] == 2 and row["mean_size"] == 12.0 and row["max_size"] == 12.0 and row["type"] == "Education"):
+        #     education.description.append(row["text"])
 
     user.summary = ' '.join(map(str, summary.description))
 
@@ -133,7 +135,7 @@ def createData(data):
     else:
         contact.email = re.search(email_pattern, contact.description).group(0)
     user.contact = contact
-
+    
     return user
 
 
